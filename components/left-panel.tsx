@@ -25,8 +25,6 @@ export function LeftPanel({ data, history }: LeftPanelProps) {
       }))
       : [{ time: 0, temp: 0 }]
 
-  console.log(history);
-
   return (
     <div className="lg:col-span-2 space-y-4">
 
