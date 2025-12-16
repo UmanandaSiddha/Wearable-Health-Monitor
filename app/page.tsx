@@ -59,6 +59,7 @@ export default function Home() {
   const [sensorData, setSensorData] = useState<SensorData | null>(null)
   const [history, setHistory] = useState<SensorData[]>([])
   const [isConnected, setIsConnected] = useState(false)
+  const [useMock, setUseMock] = useState<boolean>(true)
   const [alerts, setAlerts] = useState<Alert[]>([])
   const [thresholds, setThresholds] = useState({
     hr_high: 100,
@@ -98,6 +99,7 @@ export default function Home() {
       setSensorData(sensorData)
       setHistory((prev) => [...prev, sensorData].slice(-200)) // Keep last 200 entries
       setIsConnected(true)
+      setUseMock(false)
 
       // Check thresholds and create alerts
       const newAlerts = checkThresholds(sensorData, thresholds)
@@ -114,8 +116,9 @@ export default function Home() {
         })
       }
     } catch (error) {
-      // console.error("Failed to fetch ESP32 data:", error)
-      setIsConnected(false)
+      // When device fetch fails, fall back to mock but keep UI connected
+      setUseMock(true)
+      setIsConnected(true)
     }
   }, [esp32Ip, thresholds, isAuthenticated])
 
@@ -137,12 +140,11 @@ export default function Home() {
     }
   }, [esp32Ip, fetchESP32Data, isAuthenticated])
 
-  // Generate mock data when not connected
+  // Generate mock data while in mock mode
   useEffect(() => {
     if (!isAuthenticated) return
 
-    if (isConnected) {
-      // Clear mock data interval when connected
+    if (!useMock) {
       if (mockDataIntervalRef.current) {
         clearInterval(mockDataIntervalRef.current)
         mockDataIntervalRef.current = null
@@ -150,17 +152,16 @@ export default function Home() {
       return
     }
 
-    // Initialize with mock data if no data exists
-    const mockData = generateMockData()
-    setSensorData(mockData)
-    setHistory([mockData])
+    // Seed immediately (append, do not reset history)
+    const first = generateMockData()
+    setSensorData(first)
+    setHistory((prev) => [...prev, first].slice(-200))
     setIsConnected(true)
 
-    // Set up mock data generation interval when not connected
     mockDataIntervalRef.current = setInterval(() => {
       const mockData = generateMockData()
       setSensorData(mockData)
-      setHistory((prev) => [...prev, mockData].slice(-200)) // Keep last 200 entries
+      setHistory((prev) => [...prev, mockData].slice(-200))
       setIsConnected(true)
     }, 2000)
 
@@ -169,7 +170,7 @@ export default function Home() {
         clearInterval(mockDataIntervalRef.current)
       }
     }
-  }, [isConnected, isAuthenticated])
+  }, [useMock, isAuthenticated])
 
   useEffect(() => {
     if (isConnected || !isAuthenticated) return
@@ -231,7 +232,7 @@ export default function Home() {
             <LeftPanel data={sensorData} history={history} />
             <RightPanel data={sensorData} history={history} alerts={alerts} />
           </div>
-          <BottomPanel data={sensorData} history={history} thresholds={thresholds} onThresholdsChange={setThresholds} />
+          {/* <BottomPanel data={sensorData} history={history} thresholds={thresholds} onThresholdsChange={setThresholds} /> */}
           <AlertToast alerts={alerts} />
         </>
       )}

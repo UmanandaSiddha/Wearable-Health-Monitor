@@ -53,11 +53,11 @@ export function SummaryBar({ data, isStabilizing = false }: SummaryBarProps) {
           <p className="text-xs text-muted-foreground">Oxygen</p>
         </div>
 
-        <div className="flex flex-col gap-1">
+        {/* <div className="flex flex-col gap-1">
           <p className="text-xs text-muted-foreground font-medium">BATTERY</p>
           <p className="text-3xl font-bold text-[#FFD93D]">{batteryPct}</p>
           <p className="text-xs text-muted-foreground">{batteryMv}</p>
-        </div>
+        </div> */}
 
         <div className="flex flex-col gap-1">
           <p className="text-xs text-muted-foreground font-medium">STATUS</p>

@@ -36,13 +36,13 @@ function GyroCube({ gyro }: { gyro: GyroVec }) {
 
 export function RightPanel({ data, history, alerts = [] }: RightPanelProps) {
   // --- Temperature history (unchanged) ---
-  const tempHistory =
-    history.length > 0
-      ? history.slice(-144).map((d, i) => ({
-        time: i,
-        temp: Number.parseFloat(d.temperature_c.toFixed(1)),
-      }))
-      : [{ time: 0, temp: 0 }]
+  // const tempHistory =
+  //   history.length > 0
+  //     ? history.slice(-144).map((d, i) => ({
+  //       time: i,
+  //       temp: Number.parseFloat(d.temperature_c.toFixed(1)),
+  //     }))
+  //     : [{ time: 0, temp: 0 }]
 
   // --- Acceleration (same idea, just left as-is) ---
   const accelData = [
@@ -99,7 +99,7 @@ export function RightPanel({ data, history, alerts = [] }: RightPanelProps) {
   return (
     <div className="lg:col-span-1 space-y-4">
       {/* Temperature card */}
-      <div className="bg-card rounded-lg border border-border p-4">
+      {/* <div className="bg-card rounded-lg border border-border p-4">
         <h3 className="text-xs font-semibold text-muted-foreground mb-3">Temperature Trend</h3>
         <div className="h-24 w-full mb-2">
           <ResponsiveContainer width="100%" height="100%">
@@ -118,7 +118,7 @@ export function RightPanel({ data, history, alerts = [] }: RightPanelProps) {
           </ResponsiveContainer>
         </div>
         <p className="text-lg font-bold text-foreground">{data.temperature_c.toFixed(1)}°C</p>
-      </div>
+      </div> */}
 
       {/* Motion + 3D Gyro + Fall detection */}
       <div className="bg-card rounded-lg border border-border p-4 space-y-3">
