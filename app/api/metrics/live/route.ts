@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { verifyToken, extractTokenFromHeader } from "@/lib/auth"
 import redis from "@/lib/redis"
+import { getAllCachedReadings } from "@/lib/reading-cache"
 
 export async function GET(request: NextRequest) {
     try {
@@ -19,11 +20,31 @@ export async function GET(request: NextRequest) {
         const redisKey = `sensor:${userId}`
         const latestData = await redis.lrange(redisKey, 0, 0)
 
+        // Get cached readings (fallback if no new data)
+        const cachedReadings = await getAllCachedReadings(userId)
+
         if (latestData.length === 0) {
+            // No new data available, check if we have cached readings
+            if (!cachedReadings.heartRate && !cachedReadings.spo2) {
+                return NextResponse.json({
+                    success: true,
+                    data: null,
+                    message: "No live data available",
+                })
+            }
+
+            // Return cached readings
             return NextResponse.json({
                 success: true,
-                data: null,
-                message: "No live data available",
+                data: {
+                    heartRate: cachedReadings.heartRate?.value ?? null,
+                    spo2: cachedReadings.spo2?.value ?? null,
+                    temperature: null,
+                    accel: null,
+                    gyro: null,
+                    timestamp: cachedReadings.heartRate?.serverTimestamp || cachedReadings.spo2?.serverTimestamp || new Date().toISOString(),
+                    isCached: true, // Indicate this is cached data
+                },
             })
         }
 
@@ -38,6 +59,7 @@ export async function GET(request: NextRequest) {
                 accel: sensorData.accel,
                 gyro: sensorData.gyro,
                 timestamp: sensorData.serverTimestamp,
+                isCached: false, // Indicate this is fresh data
             },
         })
     } catch (error: any) {

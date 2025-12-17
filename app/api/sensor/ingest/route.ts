@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { verifyToken, extractTokenFromHeader } from "@/lib/auth"
 import redis from "@/lib/redis"
 import { sensorRateLimiter } from "@/lib/rate-limiter"
+import { cacheReading } from "@/lib/reading-cache"
+import { READING_CACHE_CONFIG } from "@/lib/reading-cache-config"
 
 interface SensorPayload {
     userId: string
@@ -82,6 +84,25 @@ export async function POST(request: NextRequest) {
 
         // Set TTL to 15 minutes
         await redis.expire(redisKey, TTL_SECONDS)
+
+        // Cache heart rate and spo2 readings for configured hold time
+        // This allows the readings to be held/displayed even if new readings are delayed
+        await Promise.all([
+            cacheReading(
+                userId,
+                "heartRate",
+                body.heartRate,
+                body.timestamp || new Date().toISOString(),
+                READING_CACHE_CONFIG.HOLD_TIME_SECONDS
+            ),
+            cacheReading(
+                userId,
+                "spo2",
+                body.spo2,
+                body.timestamp || new Date().toISOString(),
+                READING_CACHE_CONFIG.HOLD_TIME_SECONDS
+            ),
+        ])
 
         return NextResponse.json({
             success: true,
